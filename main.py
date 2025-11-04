@@ -32,7 +32,7 @@ def main():
             move = generate_move()
             r,c = move
             if initial_board[r][c] == -1:
-                game_board[r][c] == -1
+                game_board[r][c] = -1
                 print_game_board(game_board)
                 print("Game Over, hai trovato una bomba!")
                 exit()
