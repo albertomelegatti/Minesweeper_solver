@@ -1,7 +1,7 @@
 import time
 from functions import (print_game_board, place_mines, process_move, generate_move, save_board, solve_step, game_over, ALL_COORDS, BOARD_SIZE)
 
-N_MINES = round(BOARD_SIZE * BOARD_SIZE * 0.10)
+N_MINES = round(BOARD_SIZE * BOARD_SIZE * 0.15)
 
 def main():
     # Prima mossa
@@ -23,9 +23,11 @@ def main():
 
     # Ciclo di gioco
     while not game_over(game_board):
+
         changed = solve_step(initial_board, game_board)
         print_game_board(game_board)
         time.sleep(0.3)
+
         if not changed:
             move = generate_move()
             r,c = move
@@ -34,6 +36,7 @@ def main():
                 print_game_board(game_board)
                 print("Game Over, hai trovato una bomba!")
                 exit()
+
             process_move(initial_board, game_board, move)
 
 
