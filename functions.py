@@ -3,6 +3,8 @@ import random
 from typing import List, Tuple, Optional
 
 BOARD_SIZE = 30
+ALL_COORDS = [(r, c) for r in range(BOARD_SIZE) for c in range(BOARD_SIZE)]
+MINE_POSITIONS = []
 
 
 
@@ -10,20 +12,19 @@ BOARD_SIZE = 30
 
 def place_mines(n_mines: int, first_move: Optional[Tuple[int:int]] = None) -> List[List[str]]:
 
+    global ALL_COORDS, MINE_POSITIONS
+
     # Creiamo la griglia vuota
     board = [[-2 for _ in range(BOARD_SIZE)] for _ in range(BOARD_SIZE)]
 
-    # Generiamo tutte le posizioni possibili
-    positions = [(r, c) for r in range(BOARD_SIZE) for c in range(BOARD_SIZE)]
-
      # Se presente, escludi la prima mossa
     if first_move:
-        positions.remove(first_move)
+        ALL_COORDS.remove(first_move)
 
     # Scegliamo casulamente n_mines posizioni
-    mine_positions = random.sample(positions, n_mines)
+    MINE_POSITIONS = random.sample(ALL_COORDS, n_mines)
 
-    for r, c in mine_positions:
+    for r, c in MINE_POSITIONS:
         board[r][c] = -1
 
     return board
@@ -54,6 +55,9 @@ def mine_counter(initial_board, position):
 
 
 def cell_clicker(initial_board, game_board, position):
+    
+    global ALL_COORDS
+
     rows, cols = len(game_board), len(game_board[0])
     r, c = position
 
@@ -64,6 +68,9 @@ def cell_clicker(initial_board, game_board, position):
     # scopri la cella se è coperta e non è una bandierina
     if game_board[r][c] == -2:
         game_board[r][c] = mine_counter(initial_board, (r, c))
+        if position in ALL_COORDS:
+            ALL_COORDS.remove(position)
+
 
     # se la cella è 0, espandi nei dintorni
     if game_board[r][c] == 0:
@@ -75,6 +82,8 @@ def cell_clicker(initial_board, game_board, position):
                 if 0 <= nr < rows and 0 <= nc < cols:
                     # evita di riaprire celle già scoperte o bandierine
                     if game_board[nr][nc] == -2:
+                        if (nr, nc) in ALL_COORDS:
+                            ALL_COORDS.remove((nr, nc))
                         cell_clicker(initial_board, game_board, (nr, nc))
 
 
@@ -89,31 +98,15 @@ def process_move(initial_board, game_board, move):
 
 
 
-def free_cells_counter(initial_board, game_board, position):
-    rows, cols = len(game_board), len(game_board[0])
-    r, c = position
-    free_cells = 0
-
-    for dr in (-1, 0, 1):
-        for dc in (-1, 0, 1):
-            if dr == 0 and dc == 0:
-                continue
-            nr, nc = r + dr, c + dc
-            if 0 <= nr < rows and 0 <= nc < cols:
-                if game_board[nr][nc] == -2:
-                    free_cells += 1
-    return free_cells
-
-
-
-
-
 
 
 
 
 
 def analyze_cell(initial_board, game_board, position):
+
+    global ALL_COORDS
+
     rows, cols = len(game_board), len(game_board[0])
     r, c = position
     val = game_board[r][c]
@@ -141,12 +134,16 @@ def analyze_cell(initial_board, game_board, position):
     if len(covered) > 0 and val - flags == len(covered):
         for (nr, nc) in covered:
             game_board[nr][nc] = -3
+            if (nr, nc) in ALL_COORDS:
+                ALL_COORDS.remove((nr, nc))
             changed = True
 
     # CASO 2: tutte le mine già marcate → scopri le restanti
     elif flags == val and len(covered) > 0:
         for (nr, nc) in covered:
             game_board[nr][nc] = mine_counter(initial_board, (nr, nc))
+            if (nr, nc) in ALL_COORDS:
+                ALL_COORDS.remove((nr, nc))
             if game_board[nr][nc] == 0:
                 # espansione ricorsiva tipo cell_clicker
                 cell_clicker(initial_board, game_board, (nr, nc))
@@ -169,23 +166,6 @@ def solve_step(initial_board, game_board):
 
 
 
-
-
-
-
-
-
-
-def print_board(board):
-    os.system("cls")
-    print("\n")
-
-    for row in board:
-        row_str = ""
-        for cell in row:
-                row_str += f"{cell} "
-        print(row_str)
-
 def print_game_board(board):
     os.system("cls")
     for row in board:
@@ -206,11 +186,9 @@ def print_game_board(board):
 
 
 
-def generate_move(size):
-    x = random.randint(0, size - 1)
-    y = random.randint(0, size - 1)
-    
-    return (x, y)
+def generate_move():
+    global ALL_COORDS
+    return random.sample(ALL_COORDS, 1)[0]
 
 
 def save_board(board):
@@ -227,3 +205,4 @@ def game_over(game_board):
                 return False
     
     return True
+
