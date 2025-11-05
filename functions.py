@@ -185,10 +185,19 @@ def print_game_board(board):
 
 
 
-
+# Genera una mossa casuale
 def generate_move():
     global ALL_COORDS
     return random.sample(ALL_COORDS, 1)[0]
+
+# Genera un mossa sicura
+def generate_safe_move():
+    global ALL_COORDS, MINE_POSITIONS
+
+    move = random.sample(ALL_COORDS, 1)[0]
+    while move in MINE_POSITIONS:
+        move = random.sample(ALL_COORDS, 1)[0]
+    return move
 
 
 def save_board(board):
